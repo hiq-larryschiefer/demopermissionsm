@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Demo Permissions M</string>
+    <string name="title_activity_main">Demo Permissions</string>
+    <string name="save_log_label">Save progress log details</string>
+    <string name="echo_text_label">Place your text to be echoed in the field below, then press Send.</string>
+    <string name="progress_log_label">Progress Log</string>
+    <string name="endpoint_url">https://echome-1044.appspot.com</string>
+    <string name="submit_btn_label">Submit</string>
+    <string name="err_endpoint_msg_fmt">Endpoint failure: %s</string>
+    <string name="prog_log_descr">Load previously saved logs for viewing by touching the Load button.</string>
+    <string name="prog_load_descr">Select a previously saved log file to view.</string>
+    <string name="prog_load_title">Load saved progress log</string>
+    <string name="prog_load_unavail">External storage is currently unavailable.  Please insert an SD card or disconnect USB mounts and try again.</string>
+    <string name="ok">OK</string>
+    <string name="no_saved_files">No saved files found.</string>
+    <string name="err_file_not_found">Error: selected file not found.</string>
+    <string name="err_file_read">Unable to read selected file.</string>
+    <string name="warn_file_truncated">File loaded, but contents truncated.</string>
+    <string name="load_btn_label">Load file...</string>
+    <string name="echo_tab_label">Echo</string>
+    <string name="log_tab_label">Saved Logs</string>
+    <string name="err_unable_to_mkdir">Unable to create log directory on external storage.</string>
+    <string name="err_unable_to_create_log">Error: Unable to create log file on external storage.</string>
+
+</resources>

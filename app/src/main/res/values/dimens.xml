@@ -1,0 +1,9 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="prog_log_margin_top">12dp</dimen>
+    <dimen name="prog_border_margin">8dp</dimen>
+    <dimen name="list_item_margin">4dp</dimen>
+    <dimen name="echo_log_text_view_height">400dp</dimen>
+</resources>
