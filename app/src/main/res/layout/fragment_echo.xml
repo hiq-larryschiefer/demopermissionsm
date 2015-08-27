@@ -52,8 +52,9 @@
     <TextView
         android:id="@+id/progress_log"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/echo_log_text_view_height"
+        android:layout_height="0dp"
         android:layout_margin="@dimen/prog_border_margin"
+        android:layout_weight="1"
         android:background="@color/custom_gray"
         android:scrollHorizontally="true"
         android:gravity="bottom"

@@ -5,5 +5,4 @@
     <dimen name="prog_log_margin_top">12dp</dimen>
     <dimen name="prog_border_margin">8dp</dimen>
     <dimen name="list_item_margin">4dp</dimen>
-    <dimen name="echo_log_text_view_height">400dp</dimen>
 </resources>
