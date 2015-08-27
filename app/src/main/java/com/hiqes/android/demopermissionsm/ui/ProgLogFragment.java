@@ -69,10 +69,7 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
         mLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //  Load the dialog to choose which file to load
-                DialogFragment df = new LogLoadDialog();
-                df.show(ProgLogFragment.this.getChildFragmentManager(),
-                        getString(R.string.prog_load_title));
+                startLoadDialog();
             }
         });
 
@@ -84,6 +81,12 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
         super.onResume();
     }
 
+    private void startLoadDialog() {
+        //  Load the dialog to choose which file to load
+        DialogFragment df = new LogLoadDialog();
+        df.show(getChildFragmentManager(),
+                getString(R.string.prog_load_title));
+    }
 
     public void doLoadFile(String filePath) {
         String                  errMsg;

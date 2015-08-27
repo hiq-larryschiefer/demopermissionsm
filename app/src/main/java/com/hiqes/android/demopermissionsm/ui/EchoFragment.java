@@ -152,41 +152,47 @@ public class EchoFragment extends Fragment implements Callback<Message> {
     };
 
 
+    private void startDiskLogger() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state) ||
+                Environment.MEDIA_MOUNTED.equals(state)) {
+            Logger.d(TAG, "External storage available: " + state);
+
+            File extDir = new File(Environment.getExternalStorageDirectory(),
+                    LogLoadDialog.PROG_SAVE_DIR_NAME);
+            if (!extDir.exists()) {
+                if (!extDir.mkdir()) {
+                    String errMsg = getString(R.string.err_unable_to_mkdir);
+                    Logger.e(TAG, errMsg);
+                    Toast.makeText(getContext(),
+                            errMsg,
+                            Toast.LENGTH_LONG).show();
+                    mSaveProgLog.setChecked(false);
+                    return;
+                }
+            }
+
+            try {
+                mDiskLogWriter = new DiskLogWriter(extDir);
+                Logger.registerWriter(mDiskLogWriter);
+                Logger.d(TAG, "Added disk logger");
+            } catch (IOException e) {
+                String errMsg = getString(R.string.err_unable_to_create_log);
+                Logger.e(TAG, errMsg);
+                Toast.makeText(getContext(), errMsg, Toast.LENGTH_LONG).show();
+                mSaveProgLog.setChecked(false);
+            }
+        }
+    }
+
+
     private CompoundButton.OnCheckedChangeListener mCheckChangeListener =
         new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             if (isChecked) {
-                String state = Environment.getExternalStorageState();
-                if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state) ||
-                        Environment.MEDIA_MOUNTED.equals(state)) {
-                    Logger.d(TAG, "External storage available: " + state);
-
-                    File extDir = new File(Environment.getExternalStorageDirectory(),
-                            LogLoadDialog.PROG_SAVE_DIR_NAME);
-                    if (!extDir.exists()) {
-                        if (!extDir.mkdir()) {
-                            String errMsg = getString(R.string.err_unable_to_mkdir);
-                            Logger.e(TAG, errMsg);
-                            Toast.makeText(getContext(),
-                                           errMsg,
-                                           Toast.LENGTH_LONG).show();
-                            buttonView.setChecked(false);
-                            return;
-                        }
-                    }
-
-                    try {
-                        mDiskLogWriter = new DiskLogWriter(extDir);
-                        Logger.registerWriter(mDiskLogWriter);
-                        Logger.d(TAG, "Added disk logger");
-                    } catch (IOException e) {
-                        String errMsg = getString(R.string.err_unable_to_create_log);
-                        Logger.e(TAG, errMsg);
-                        Toast.makeText(getContext(), errMsg, Toast.LENGTH_LONG).show();
-                        buttonView.setChecked(false);
-                    }
-                }
+                //  Create and start our disk logger
+                startDiskLogger();
             } else {
                 //  Unregister any previous logger we had injected
                 if (mDiskLogWriter != null) {
