@@ -16,6 +16,9 @@
  */
 package com.hiqes.android.demopermissionsm.ui;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.CallLog;
 import android.support.v4.app.FragmentTransaction;
@@ -34,8 +37,11 @@ import android.view.Window;
 import com.hiqes.android.demopermissionsm.R;
 import com.hiqes.android.demopermissionsm.util.Logger;
 
+import java.util.zip.Inflater;
+
 public class MainActivity extends ActionBarActivity implements ViewPager.OnPageChangeListener {
     private static final String         TAG = MainActivity.class.getSimpleName();
+    private static final int            REQ_PERM_READ_CALL_LOG = 708;
 
     private static final int            TAB_ECHO = 0;
     private static final int            TAB_LOAD_PROG_LOG = 1;
@@ -59,13 +65,46 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
         mPager.setAdapter(mAdapter);
         mPager.setOnPageChangeListener(this);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                if (!shouldShowRequestPermissionRationale(Manifest.permission.READ_CALL_LOG)) {
+                    String[] perms = { Manifest.permission.READ_CALL_LOG };
+                    requestPermissions(perms, REQ_PERM_READ_CALL_LOG);
+                }
+            }
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = new MenuInflater(this);
+        MenuInflater            inflater = new MenuInflater(this);
         inflater.inflate(R.menu.menu_main, menu);
+
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem                item = menu.findItem(R.id.get_last_call);
+
+        //  Check to see if we have the READ_CALL_LOG permission.  If we do not,
+        //  then don't add the menu button.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                if (item == null) {
+                    MenuInflater    inflater = new MenuInflater(this);
+                    inflater.inflate(R.menu.menu_main, menu);
+                }
+            } else {
+                if (item != null) {
+                    menu.removeItem(item.getItemId());
+                }
+            }
+        }
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -90,6 +129,15 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
         }
 
         return handled;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_PERM_READ_CALL_LOG) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                invalidateOptionsMenu();
+            }
+        }
     }
 
     private class FragTabAdapter extends FragmentPagerAdapter implements ActionBar.TabListener {

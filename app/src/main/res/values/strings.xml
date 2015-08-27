@@ -23,5 +23,9 @@
     <string name="err_unable_to_create_log">Error: Unable to create log file on external storage.</string>
     <string name="get_last_call">Get Last Call</string>
     <string name="no_calL"><![CDATA[<NONE>]]></string>
+    <string name="write_ext_explain">Progress log files are written to the public external storage area, which requires the WRITE_EXTERNAL_STORAGE permission.  Please go to the Settings app and enable the Storage permission to use this functionality.</string>
+    <string name="warn_ext_store_disabled">Write to external storage is not enabled.</string>
+    <string name="read_ext_explain">Saved logs are located in the protected area of external storage, which requires the READ_EXTERNAL_STORAGE permission.  Please go to the Settings app and enable Storage permission for the app.</string>
+    <string name="read_perm_denied">Read permissions for external storage not granted.</string>
 
 </resources>

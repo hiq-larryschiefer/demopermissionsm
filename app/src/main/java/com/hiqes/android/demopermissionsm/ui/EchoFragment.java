@@ -16,10 +16,15 @@
  */
 package com.hiqes.android.demopermissionsm.ui;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
@@ -52,6 +57,7 @@ import retrofit.client.Response;
 
 public class EchoFragment extends Fragment implements Callback<Message> {
     private static final String         TAG = EchoFragment.class.getSimpleName();
+    private static final int            REQ_CODE_EXT_STORAGE = 828;
 
     private EditText            mEchoText;
     private TextView            mProgLogText;
@@ -130,6 +136,20 @@ public class EchoFragment extends Fragment implements Callback<Message> {
         super.onPause();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_CODE_EXT_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startDiskLogger();
+            } else {
+                Toast.makeText(getContext(),
+                               R.string.warn_ext_store_disabled,
+                               Toast.LENGTH_LONG).show();
+                mSaveProgLog.setChecked(false);
+            }
+        }
+    }
+
     private View.OnClickListener    mSubmitListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -191,7 +211,30 @@ public class EchoFragment extends Fragment implements Callback<Message> {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             if (isChecked) {
-                //  Create and start our disk logger
+                //  Create and start our disk logger, if allowed
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    AppCompatActivity act = (AppCompatActivity)getContext();
+
+                    if (act.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                            PackageManager.PERMISSION_GRANTED) {
+                        if (act.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                            //  Just use toast for now
+                            Toast.makeText(act,
+                                           getString(R.string.write_ext_explain),
+                                           Toast.LENGTH_LONG).show();
+
+                            //  Return, we can't do anything
+                            mSaveProgLog.setChecked(false);
+                            return;
+                        }
+
+                        //  Request the permission, we'll handle the response later
+                        String[] reqPerms = { Manifest.permission.WRITE_EXTERNAL_STORAGE };
+                        act.requestPermissions(reqPerms, REQ_CODE_EXT_STORAGE);
+                        return;
+                    }
+                }
+
                 startDiskLogger();
             } else {
                 //  Unregister any previous logger we had injected

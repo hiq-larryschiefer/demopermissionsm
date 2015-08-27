@@ -22,8 +22,8 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.widget.ArrayAdapter;
 
 import com.hiqes.android.demopermissionsm.R;
@@ -32,7 +32,7 @@ import com.hiqes.android.demopermissionsm.util.Logger;
 import java.io.File;
 import java.util.Arrays;
 
-public class LogLoadDialog extends DialogFragment implements DialogInterface.OnClickListener {
+public class LogLoadDialog extends AppCompatDialogFragment implements DialogInterface.OnClickListener {
     private static final String         TAG = LogLoadDialog.class.getSimpleName();
     public static final String          PROG_SAVE_DIR_NAME = "demop";
 

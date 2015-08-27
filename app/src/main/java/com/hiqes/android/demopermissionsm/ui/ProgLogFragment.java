@@ -16,10 +16,14 @@
  */
 package com.hiqes.android.demopermissionsm.ui;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +42,7 @@ import java.io.IOException;
 
 public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks {
     private static final String         TAG = ProgLogFragment.class.getSimpleName();
+    private static final int            REQ_CODE_READ_EXT_STORAGE = 808;
 
     private Button              mLoad;
     private TextView            mLoadedLog;
@@ -69,6 +74,28 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
         mLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //  Check to see if we have the permission
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    AppCompatActivity act = (AppCompatActivity) getContext();
+                    if (act.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                            PackageManager.PERMISSION_GRANTED) {
+                        if (act.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                            //  Just use toast for now
+                            Toast.makeText(act,
+                                    getString(R.string.read_ext_explain),
+                                    Toast.LENGTH_LONG).show();
+
+                            //  Return, we can't do anything
+                            return;
+                        }
+
+                        //  Request the permission, we'll handle the response later
+                        String[] reqPerms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+                        act.requestPermissions(reqPerms, REQ_CODE_READ_EXT_STORAGE);
+                        return;
+                    }
+                }
+
                 startLoadDialog();
             }
         });
@@ -79,6 +106,19 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_CODE_READ_EXT_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startLoadDialog();
+            } else {
+                Toast.makeText(getContext(),
+                               R.string.read_perm_denied,
+                               Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private void startLoadDialog() {
