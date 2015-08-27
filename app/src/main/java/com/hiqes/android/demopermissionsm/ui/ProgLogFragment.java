@@ -79,15 +79,6 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
                     AppCompatActivity act = (AppCompatActivity) getContext();
                     if (act.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) !=
                             PackageManager.PERMISSION_GRANTED) {
-                        if (act.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                            //  Just use toast for now
-                            Toast.makeText(act,
-                                    getString(R.string.read_ext_explain),
-                                    Toast.LENGTH_LONG).show();
-
-                            //  Return, we can't do anything
-                            return;
-                        }
 
                         //  Request the permission, we'll handle the response later
                         String[] reqPerms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -114,9 +105,15 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLoadDialog();
             } else {
-                Toast.makeText(getContext(),
-                               R.string.read_perm_denied,
-                               Toast.LENGTH_LONG).show();
+                AppCompatActivity act = (AppCompatActivity)getContext();
+
+                if (act.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    //  Just use toast for now
+                    Toast.makeText(act,
+                            getString(R.string.read_ext_explain),
+                            Toast.LENGTH_LONG).show();
+
+                }
             }
         }
     }

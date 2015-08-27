@@ -137,6 +137,8 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 invalidateOptionsMenu();
             }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
