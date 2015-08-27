@@ -22,7 +22,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -142,10 +141,17 @@ public class EchoFragment extends Fragment implements Callback<Message> {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startDiskLogger();
             } else {
-                Toast.makeText(getContext(),
-                               R.string.warn_ext_store_disabled,
-                               Toast.LENGTH_LONG).show();
-                mSaveProgLog.setChecked(false);
+                AppCompatActivity act = (AppCompatActivity)getContext();
+
+                if (act.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    //  Just use toast for now
+                    Toast.makeText(act,
+                            getString(R.string.write_ext_explain),
+                            Toast.LENGTH_LONG).show();
+
+                    //  Return, we can't do anything
+                    mSaveProgLog.setChecked(false);
+                }
             }
         }
     }
@@ -217,17 +223,6 @@ public class EchoFragment extends Fragment implements Callback<Message> {
 
                     if (act.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                             PackageManager.PERMISSION_GRANTED) {
-                        if (act.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                            //  Just use toast for now
-                            Toast.makeText(act,
-                                           getString(R.string.write_ext_explain),
-                                           Toast.LENGTH_LONG).show();
-
-                            //  Return, we can't do anything
-                            mSaveProgLog.setChecked(false);
-                            return;
-                        }
-
                         //  Request the permission, we'll handle the response later
                         String[] reqPerms = { Manifest.permission.WRITE_EXTERNAL_STORAGE };
                         act.requestPermissions(reqPerms, REQ_CODE_EXT_STORAGE);
