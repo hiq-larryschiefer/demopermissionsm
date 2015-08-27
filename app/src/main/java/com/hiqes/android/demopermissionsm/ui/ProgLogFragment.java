@@ -105,6 +105,8 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
                 Logger.w(TAG, errMsg);
             }
 
+            Logger.d(TAG,
+                     "Read contents from log: " + inFile.getName());
             reader.close();
             mLoadedLog.setText(text, 0, readCount);
         } catch (FileNotFoundException e) {
