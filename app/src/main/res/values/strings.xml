@@ -21,5 +21,7 @@
     <string name="log_tab_label">Saved Logs</string>
     <string name="err_unable_to_mkdir">Unable to create log directory on external storage.</string>
     <string name="err_unable_to_create_log">Error: Unable to create log file on external storage.</string>
+    <string name="get_last_call">Get Last Call</string>
+    <string name="no_calL"><![CDATA[<NONE>]]></string>
 
 </resources>

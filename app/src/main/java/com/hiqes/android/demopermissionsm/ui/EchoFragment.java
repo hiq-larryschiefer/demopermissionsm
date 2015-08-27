@@ -3,11 +3,15 @@ package com.hiqes.android.demopermissionsm.ui;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.CallLog;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -94,12 +98,19 @@ public class EchoFragment extends Fragment implements Callback<Message> {
         mSaveProgLog = (CheckBox)root.findViewById(R.id.save_log);
         mSaveProgLog.setOnCheckedChangeListener(mCheckChangeListener);
         mTvLogWriter = new TextViewLogWriter(mProgLogText);
-        Logger.registerWriter(mTvLogWriter);
 
         mSubmitBtn   = (Button)root.findViewById(R.id.echo_submit);
         mSubmitBtn.setOnClickListener(mSubmitListener);
         return root;
     }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Logger.registerWriter(mTvLogWriter);
+    }
+
 
     @Override
     public void onPause() {
@@ -161,6 +172,7 @@ public class EchoFragment extends Fragment implements Callback<Message> {
                         String errMsg = getString(R.string.err_unable_to_create_log);
                         Logger.e(TAG, errMsg);
                         Toast.makeText(getContext(), errMsg, Toast.LENGTH_LONG).show();
+                        buttonView.setChecked(false);
                     }
                 }
             } else {

@@ -1,6 +1,7 @@
 package com.hiqes.android.demopermissionsm.ui;
 
 import android.os.Bundle;
+import android.provider.CallLog;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -8,9 +9,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.Window;
 
 import com.hiqes.android.demopermissionsm.R;
+import com.hiqes.android.demopermissionsm.util.Logger;
 
 public class MainActivity extends ActionBarActivity implements ViewPager.OnPageChangeListener {
     private static final String         TAG = MainActivity.class.getSimpleName();
@@ -37,6 +43,37 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
         mPager.setAdapter(mAdapter);
         mPager.setOnPageChangeListener(this);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = new MenuInflater(this);
+        inflater.inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        boolean                 handled = false;
+
+        if (item.getItemId() == R.id.get_last_call) {
+            //  Try to get the last outgoing call number
+            String lastOutCallNum = CallLog.Calls.getLastOutgoingCall(this);
+            if (TextUtils.isEmpty(lastOutCallNum)) {
+                lastOutCallNum = getString(R.string.no_calL);
+            }
+
+            Logger.i(TAG,
+                    "Retrieved last outgoing call number: " +
+                            lastOutCallNum);
+            handled = true;
+        }
+
+        if (!handled) {
+            handled = super.onOptionsItemSelected(item);
+        }
+
+        return handled;
     }
 
     private class FragTabAdapter extends FragmentPagerAdapter implements ActionBar.TabListener {
