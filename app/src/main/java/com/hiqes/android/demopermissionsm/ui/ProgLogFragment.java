@@ -42,7 +42,7 @@ import java.io.IOException;
 
 public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks {
     private static final String         TAG = ProgLogFragment.class.getSimpleName();
-    private static final int            REQ_CODE_READ_EXT_STORAGE = 808;
+    private static final int            REQ_CODE_READ_EXT_STORAGE = 1;
 
     private Button              mLoad;
     private TextView            mLoadedLog;
@@ -82,7 +82,7 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
 
                         //  Request the permission, we'll handle the response later
                         String[] reqPerms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                        act.requestPermissions(reqPerms, REQ_CODE_READ_EXT_STORAGE);
+                        requestPermissions(reqPerms, REQ_CODE_READ_EXT_STORAGE);
                         return;
                     }
                 }

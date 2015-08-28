@@ -56,7 +56,7 @@ import retrofit.client.Response;
 
 public class EchoFragment extends Fragment implements Callback<Message> {
     private static final String         TAG = EchoFragment.class.getSimpleName();
-    private static final int            REQ_CODE_EXT_STORAGE = 828;
+    private static final int            REQ_CODE_EXT_STORAGE = 1;
 
     private EditText            mEchoText;
     private TextView            mProgLogText;
@@ -225,7 +225,7 @@ public class EchoFragment extends Fragment implements Callback<Message> {
                             PackageManager.PERMISSION_GRANTED) {
                         //  Request the permission, we'll handle the response later
                         String[] reqPerms = { Manifest.permission.WRITE_EXTERNAL_STORAGE };
-                        act.requestPermissions(reqPerms, REQ_CODE_EXT_STORAGE);
+                        requestPermissions(reqPerms, REQ_CODE_EXT_STORAGE);
                         return;
                     }
                 }
