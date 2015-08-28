@@ -27,5 +27,6 @@
     <string name="warn_ext_store_disabled">Write to external storage is not enabled.</string>
     <string name="read_ext_explain">Saved logs are located in the protected area of external storage, which requires the READ_EXTERNAL_STORAGE permission.  Please go to the Settings app and enable Storage permission for the app.</string>
     <string name="read_perm_denied">Read permissions for external storage not granted.</string>
+    <string name="no_call_log_radionale">The READ_CALL_LOG permission is needed in order to get the last call made from this device.  The app currently does not have permission, so this functionality will be disabled.</string>
 
 </resources>

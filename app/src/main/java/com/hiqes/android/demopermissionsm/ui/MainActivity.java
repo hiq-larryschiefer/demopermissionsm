@@ -33,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.hiqes.android.demopermissionsm.R;
 import com.hiqes.android.demopermissionsm.util.Logger;
@@ -68,10 +69,9 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) !=
                     PackageManager.PERMISSION_GRANTED) {
-                if (!shouldShowRequestPermissionRationale(Manifest.permission.READ_CALL_LOG)) {
-                    String[] perms = { Manifest.permission.READ_CALL_LOG };
-                    requestPermissions(perms, REQ_PERM_READ_CALL_LOG);
-                }
+                //  Always ask
+                String[] perms = { Manifest.permission.READ_CALL_LOG };
+                requestPermissions(perms, REQ_PERM_READ_CALL_LOG);
             }
         }
     }
@@ -134,9 +134,15 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == REQ_PERM_READ_CALL_LOG) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                invalidateOptionsMenu();
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CALL_LOG)) {
+                    Toast.makeText(this,
+                                   R.string.no_call_log_radionale,
+                                   Toast.LENGTH_LONG).show();
+                }
             }
+
+            invalidateOptionsMenu();
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
