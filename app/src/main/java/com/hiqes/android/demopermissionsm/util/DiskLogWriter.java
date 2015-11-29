@@ -16,6 +16,7 @@
  */
 package com.hiqes.android.demopermissionsm.util;
 
+import android.util.Log;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 public class DiskLogWriter implements Logger.LoggerWriter {
+    private static final String TAG = DiskLogWriter.class.getSimpleName();
     private FileWriter          mWriter;
 
     public DiskLogWriter(File path) throws IOException {
@@ -61,6 +63,7 @@ public class DiskLogWriter implements Logger.LoggerWriter {
             mWriter.append(entry);
         } catch (IOException e) {
             //  Really should cause us to cleanup or callback the app via the Logger
+           Log.d(TAG, "writeEntry: failed with exception - " + e.getMessage());
         }
     }
 }

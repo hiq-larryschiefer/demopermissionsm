@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item android:id="@+id/get_last_call"
           android:icon="@android:drawable/ic_menu_call"
           android:visible="true"
           app:showAsAction="ifRoom"
           android:title="@string/get_last_call" />
+
+      <item android:id="@+id/get_last_location"
+          android:icon="@android:drawable/ic_menu_compass"
+          android:visible="true"
+          app:showAsAction="ifRoom"
+          android:title="@string/get_last_location" />
 </menu>

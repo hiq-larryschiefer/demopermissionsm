@@ -17,7 +17,10 @@
 package com.hiqes.android.demopermissionsm.ui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.CallLog;
@@ -29,18 +32,23 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Window;
-import android.widget.Toast;
 
+import com.hiqes.andele.Andele;
+import com.hiqes.andele.PermissionDetails;
+import com.hiqes.andele.PermissionUse;
+import com.hiqes.andele.ProtectedAction;
+import com.hiqes.andele.SimpleUserPrompter;
 import com.hiqes.android.demopermissionsm.R;
 import com.hiqes.android.demopermissionsm.util.Logger;
 
-import java.util.zip.Inflater;
 
-public class MainActivity extends ActionBarActivity implements ViewPager.OnPageChangeListener {
+public class MainActivity extends ActionBarActivity implements ViewPager.OnPageChangeListener,
+                                                               ProtectedAction.Listener {
     private static final String         TAG = MainActivity.class.getSimpleName();
     private static final int            REQ_PERM_READ_CALL_LOG = 708;
 
@@ -50,6 +58,10 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
 
     private ViewPager           mPager;
     private FragTabAdapter      mAdapter;
+    private ProtectedAction     mReadCallLogAction;
+    private ProtectedAction     mGetLocationAction;
+    private SimpleUserPrompter  mPrompter;
+    private LocationManager     mLocMgr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,19 +73,42 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
         ActionBar ab = getSupportActionBar();
         ab.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
+        mLocMgr = (LocationManager)getSystemService(LOCATION_SERVICE);
+
         mPager = (ViewPager)findViewById(R.id.pager);
         mAdapter = new FragTabAdapter(getSupportFragmentManager());
         mPager.setAdapter(mAdapter);
         mPager.setOnPageChangeListener(this);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                //  Always ask
-                String[] perms = { Manifest.permission.READ_CALL_LOG };
-                requestPermissions(perms, REQ_PERM_READ_CALL_LOG);
-            }
-        }
+        mPrompter = new SimpleUserPrompter(this,
+                                           findViewById(android.R.id.content),
+                                           -1,
+                                           -1,
+                                           -1,
+                                           -1,
+                                           -1);
+
+        ProtectedAction.Builder builder = new ProtectedAction.Builder();
+        builder.withPermission(Manifest.permission.READ_CALL_LOG)
+               .withUsage(PermissionUse.ESSENTIAL)
+               .listener(this)
+               .actionCallback(mGetCallLogCb)
+               .userPromptCallback(mPrompter);
+        mReadCallLogAction = builder.build();
+
+        builder = new ProtectedAction.Builder();
+        builder.withPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+               .withUsage(PermissionUse.CRITICAL)
+               .listener(this)
+               .actionCallback(mGetLocationCb)
+               .userPromptCallback(mPrompter);
+
+        mGetLocationAction = builder.build();
+
+        ProtectedAction[] actions = new ProtectedAction[2];
+        actions[0] = mReadCallLogAction;
+        actions[1] = mGetLocationAction;
+        Andele.checkAndRequestMandatoryPermissions(this, actions);
     }
 
     @Override
@@ -86,21 +121,24 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem                item = menu.findItem(R.id.get_last_call);
+        MenuInflater            inflater = new MenuInflater(this);
+        MenuItem                lastCallItem;
+        MenuItem                lastLocationItem;
 
-        //  Check to see if we have the READ_CALL_LOG permission.  If we do not,
-        //  then don't add the menu button.
+        menu.clear();
+        inflater.inflate(R.menu.menu_main, menu);
+        lastCallItem = menu.findItem(R.id.get_last_call);
+        lastLocationItem = menu.findItem(R.id.get_last_location);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_CALL_LOG) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                if (item == null) {
-                    MenuInflater    inflater = new MenuInflater(this);
-                    inflater.inflate(R.menu.menu_main, menu);
-                }
-            } else {
-                if (item != null) {
-                    menu.removeItem(item.getItemId());
-                }
+                    PackageManager.PERMISSION_DENIED) {
+                menu.removeItem(lastCallItem.getItemId());
+            }
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_DENIED) {
+                menu.removeItem(lastLocationItem.getItemId());
             }
         }
 
@@ -110,17 +148,15 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         boolean                 handled = false;
+        int                     id = item.getItemId();
 
-        if (item.getItemId() == R.id.get_last_call) {
-            //  Try to get the last outgoing call number
-            String lastOutCallNum = CallLog.Calls.getLastOutgoingCall(this);
-            if (TextUtils.isEmpty(lastOutCallNum)) {
-                lastOutCallNum = getString(R.string.no_calL);
-            }
+        if (id == R.id.get_last_call) {
+            Andele.checkAndExecute(this, mReadCallLogAction);
+            handled = true;
+        }
 
-            Logger.i(TAG,
-                    "Retrieved last outgoing call number: " +
-                            lastOutCallNum);
+        if (id == R.id.get_last_location) {
+            Andele.checkAndExecute(this, mGetLocationAction);
             handled = true;
         }
 
@@ -133,20 +169,54 @@ public class MainActivity extends ActionBarActivity implements ViewPager.OnPageC
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQ_PERM_READ_CALL_LOG) {
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CALL_LOG)) {
-                    Toast.makeText(this,
-                                   R.string.no_call_log_radionale,
-                                   Toast.LENGTH_LONG).show();
-                }
-            }
-
-            invalidateOptionsMenu();
-        } else {
+        if (!Andele.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+
+    @Override
+    public void onPermissionGranted(PermissionDetails details) {
+        Log.d(TAG, "onPermissionGranted: " + details.getPermission());
+    }
+
+    @Override
+    public void onPermissionDenied(PermissionDetails details) {
+        Log.d(TAG, "onPermissionDenied: " + details.getPermission());
+    }
+
+    private ProtectedAction.ActionCallback mGetLocationCb = new ProtectedAction.ActionCallback() {
+        @Override
+        @SuppressWarnings("ResourceType")
+        public void doAction(ProtectedAction action) {
+            Location            lastLocation;
+            String              lastLocString;
+
+            lastLocation = mLocMgr.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (lastLocation == null) {
+                lastLocString = "<UNKNOWN>";
+            } else {
+                lastLocString = String.format("Lat: %f, Long: %f",
+                                              lastLocation.getLatitude(),
+                                              lastLocation.getLongitude());
+            }
+
+            Logger.i(TAG, "Retrieved last approx location: " + lastLocString);
+        }
+    };
+
+    private ProtectedAction.ActionCallback mGetCallLogCb = new ProtectedAction.ActionCallback() {
+        @Override
+        public void doAction(ProtectedAction protectedAction) {
+            String lastOutCallNum = CallLog.Calls.getLastOutgoingCall(MainActivity.this);
+            if (TextUtils.isEmpty(lastOutCallNum)) {
+                lastOutCallNum = getString(R.string.no_calL);
+            }
+
+            Logger.i(TAG,
+                    "Retrieved last outgoing call number: " +
+                            lastOutCallNum);
+        }
+    };
 
     private class FragTabAdapter extends FragmentPagerAdapter implements ActionBar.TabListener {
         public FragTabAdapter(FragmentManager fm) {

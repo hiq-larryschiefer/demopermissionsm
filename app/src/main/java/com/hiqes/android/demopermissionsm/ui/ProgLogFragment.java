@@ -32,6 +32,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hiqes.andele.Andele;
+import com.hiqes.andele.PermissionUse;
+import com.hiqes.andele.ProtectedAction;
+import com.hiqes.andele.SimpleUserPrompter;
 import com.hiqes.android.demopermissionsm.R;
 import com.hiqes.android.demopermissionsm.util.Logger;
 
@@ -46,7 +50,8 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
 
     private Button              mLoad;
     private TextView            mLoadedLog;
-
+    private ProtectedAction     mLoadLogAction;
+    private SimpleUserPrompter  mPrompter;
 
     public static ProgLogFragment newInstance() {
         ProgLogFragment fragment = new ProgLogFragment();
@@ -60,6 +65,21 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mPrompter =
+            new SimpleUserPrompter(getActivity(),
+                                   getActivity().findViewById(android.R.id.content),
+                                   -1,
+                                   -1,
+                                   -1,
+                                   -1,
+                                   -1);
+        ProtectedAction.Builder builder = new ProtectedAction.Builder();
+        builder.withPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .withUsage(PermissionUse.OPTIONAL)
+                .actionCallback(mLoadLogCb)
+                .userPromptCallback(mPrompter);
+        mLoadLogAction = builder.build();
     }
 
     @Override
@@ -74,20 +94,7 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
         mLoad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //  Check to see if we have the permission
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    AppCompatActivity act = (AppCompatActivity) getContext();
-                    if (act.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) !=
-                            PackageManager.PERMISSION_GRANTED) {
-
-                        //  Request the permission, we'll handle the response later
-                        String[] reqPerms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                        requestPermissions(reqPerms, REQ_CODE_READ_EXT_STORAGE);
-                        return;
-                    }
-                }
-
-                startLoadDialog();
+                Andele.checkAndExecute(ProgLogFragment.this, mLoadLogAction);
             }
         });
 
@@ -101,22 +108,17 @@ public class ProgLogFragment extends Fragment implements LogLoadDialog.Callbacks
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQ_CODE_READ_EXT_STORAGE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startLoadDialog();
-            } else {
-                AppCompatActivity act = (AppCompatActivity)getContext();
-
-                if (act.shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    //  Just use toast for now
-                    Toast.makeText(act,
-                            getString(R.string.read_ext_explain),
-                            Toast.LENGTH_LONG).show();
-
-                }
-            }
+        if (!Andele.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+
+    private ProtectedAction.ActionCallback  mLoadLogCb = new ProtectedAction.ActionCallback() {
+        @Override
+        public void doAction(ProtectedAction action) {
+            startLoadDialog();
+        }
+    };
 
     private void startLoadDialog() {
         //  Load the dialog to choose which file to load

@@ -26,6 +26,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +40,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hiqes.andele.Andele;
+import com.hiqes.andele.PermissionDetails;
+import com.hiqes.andele.PermissionUse;
+import com.hiqes.andele.ProtectedAction;
+import com.hiqes.andele.SimpleUserPrompter;
 import com.hiqes.android.demopermissionsm.R;
 import com.hiqes.android.demopermissionsm.loader.EchoMessageEndpoint;
 import com.hiqes.android.demopermissionsm.model.Message;
@@ -137,23 +143,12 @@ public class EchoFragment extends Fragment implements Callback<Message> {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQ_CODE_EXT_STORAGE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startDiskLogger();
-            } else {
-                AppCompatActivity act = (AppCompatActivity)getContext();
-
-                if (act.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    //  Just use toast for now
-                    Toast.makeText(act,
-                            getString(R.string.write_ext_explain),
-                            Toast.LENGTH_LONG).show();
-
-                    //  Return, we can't do anything
-                    mSaveProgLog.setChecked(false);
-                }
-            }
+        if (Andele.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+            Log.d(TAG, "onRequestPermissionsResult: Andele handled it");
+            return;
         }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private View.OnClickListener    mSubmitListener = new View.OnClickListener() {
@@ -218,19 +213,37 @@ public class EchoFragment extends Fragment implements Callback<Message> {
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             if (isChecked) {
                 //  Create and start our disk logger, if allowed
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    AppCompatActivity act = (AppCompatActivity)getContext();
+                ProtectedAction.Builder builder = new ProtectedAction.Builder();
+                builder.withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                       .withUsage(PermissionUse.FEATURE)
+                       .actionCallback(new ProtectedAction.ActionCallback() {
+                           @Override
+                           public void doAction(ProtectedAction protectedAction) {
+                               Log.d(TAG, "doAction: Starting logger");
+                               startDiskLogger();
+                           }
+                       })
+                       .userPromptCallback(new SimpleUserPrompter(getActivity(),
+                                            getActivity().findViewById(android.R.id.content),
+                                            -1,
+                                            -1,
+                                            -1,
+                                            -1,
+                                            -1))
+                       .listener(new ProtectedAction.Listener() {
+                           @Override
+                           public void onPermissionGranted(PermissionDetails details) {
+                               Log.d(TAG, "onPermissionGranted: " + details.getPermission());
+                           }
 
-                    if (act.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                            PackageManager.PERMISSION_GRANTED) {
-                        //  Request the permission, we'll handle the response later
-                        String[] reqPerms = { Manifest.permission.WRITE_EXTERNAL_STORAGE };
-                        requestPermissions(reqPerms, REQ_CODE_EXT_STORAGE);
-                        return;
-                    }
-                }
+                           @Override
+                           public void onPermissionDenied(PermissionDetails details) {
+                               Log.d(TAG, "onPermissionDenied: " + details.getPermission());
+                               mSaveProgLog.setChecked(false);
+                           }
 
-                startDiskLogger();
+                       });
+                Andele.checkAndExecute(EchoFragment.this, builder.build());
             } else {
                 //  Unregister any previous logger we had injected
                 if (mDiskLogWriter != null) {
